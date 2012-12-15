@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import web
 import time
 import os.path
