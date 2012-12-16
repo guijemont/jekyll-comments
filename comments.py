@@ -47,6 +47,7 @@ class add_comment:
         }
         comment.update(self._input_data_iterator(input_))
         self._write_comment(comment, COMMENT_DIR)
+        web.header('Content-Type', 'text/html')
         return self.ACK_MSG % {'return_url': input_.return_url}
 
     def _sanitize_field(self, data_, max_size=None):
