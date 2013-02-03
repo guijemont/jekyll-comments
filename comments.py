@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import web
+import cgi
 import time
 import os.path
 import smtplib
@@ -11,7 +12,7 @@ from email.mime.multipart import MIMEMultipart
 COMMENT_DIR = "_comments"
 COMMENT_EMAIL = "blog@example.com"
 MAX_SIZE = 1024
-MAX_SIZE_COMMENT = 1024000
+MAX_SIZE_COMMENT = 102400
 
 urls = (
     '/', 'index',
@@ -42,12 +43,33 @@ class add_comment:
     </body>
     </html>
     """
+    ERROR_MSG = """
+    <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+       "http://www.w3.org/TR/html4/strict.dtd">
+    <html>
+        <head>
+            <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+            <title>Problem with input</title>
+        </head>
+    <body>
+    <h1>Error!</h1>
+        <p>The following error was detected: <br/>
+        %(error_msg)
+        </p>
+    </body>
+    </html>
+    """
     SMTPCONF = {
         'host': 'localhost',
         'port': 1025
     }
     def POST(self):
-        input_ = web.input()
+        try:
+            input_ = web.input()
+        except ValueError:
+            referer = web.ctx.env.get('HTTP_REFERER', '/')
+            return self.ERROR_MSG % {'error_msg': "Input is too big, you should write less! Hit the back button and try again.",
+                                     'return_url': referer}
         comment = {
             'author_ip': web.ctx.ip,
             'date_gmt': time.strftime(self.DATE_FORMAT, time.gmtime()),
@@ -126,5 +148,7 @@ class add_comment:
 
 
 if __name__ == "__main__":
+    # limit the size of POST requests to 10kb
+    cgi.maxlen = MAX_SIZE_COMMENT
     app = web.application(urls, globals())
     app.run()
