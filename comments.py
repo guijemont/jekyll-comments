@@ -2,7 +2,7 @@
 import web
 import cgi
 import time
-import os.path
+import os, os.path
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
@@ -15,14 +15,12 @@ MAX_SIZE = 1024
 MAX_SIZE_COMMENT = 102400
 
 urls = (
-    '/', 'index',
     '/add_comment', 'add_comment'
 )
 
-class index:
-    def GET(self):
-        return "Hello, world!"
-
+def is_test():
+    webpy_env = os.environ.get('WEBPY_ENV', '')
+    return webpy_env == 'test'
 
 class add_comment:
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
@@ -113,14 +111,16 @@ class add_comment:
 
     def _write_comment(self, comment, path):
         comment_string = self._yml_from_dict(comment)
+        comment_string = comment_string.encode('UTF-8')
         filepath = self._comment_file_name(comment)
         full_file_name = os.path.join(path, filepath)
         full_path, _ = os.path.split(full_file_name)
         if not os.path.exists(full_path):
             os.mkdir(full_path)
-        f = open(full_file_name, "w")
-        f.write(comment_string.encode("UTF-8"))
-        f.close()
+        if not is_test():
+            f = open(full_file_name, "w")
+            f.write(comment_string)
+            f.close()
 
     def _email_comment(self, comment, email):
         comment_string = self._yml_from_dict(comment)
@@ -135,20 +135,22 @@ class add_comment:
         message['Subject'] = "[blogcomment] New comment from %s on %s" % (
                                                       comment['author_email'],
                                                       comment['post_id'])
-        message['From'] = 'noreply@example.com'
+        message['From'] = 'noreply@emont.org'
         message['To'] = email
         message.attach(MIMEText("A new comment has been posted!\n"))
 
 
         message.attach(comment_attachment)
 
-        s = smtplib.SMTP(**self.SMTPCONF)
-        s.sendmail(email, [email], message.as_string())
-        s.quit()
+        if not is_test():
+            s = smtplib.SMTP(**self.SMTPCONF)
+            s.sendmail(email, [email], message.as_string())
+            s.quit()
 
 
-if __name__ == "__main__":
-    # limit the size of POST requests to 10kb
-    cgi.maxlen = MAX_SIZE_COMMENT
-    app = web.application(urls, globals())
+# limit the size of POST requests to 10kb
+cgi.maxlen = MAX_SIZE_COMMENT
+app = web.application(urls, globals())
+
+if (not is_test()) and __name__ == "__main__":
     app.run()
