@@ -30,3 +30,18 @@ class TestAddComment():
         r = testApp.post('/add_comment', params=self.correct_comment_params)
         assert_equal(r.status, 200)
         r.mustcontain("Thank you for your comment")
+
+    def test_size(self):
+        middleware = []
+        testApp = TestApp(app.wsgifunc(*middleware))
+
+        comment_params = dict(self.correct_comment_params)
+        comment_params['content'] = "a" * 100000
+
+        r = testApp.post('/add_comment', params=comment_params)
+        assert_equal(r.status, 200)
+        r.mustcontain("Thank you for your comment")
+
+        comment_params['content'] = "a" * 102400
+        with assert_raises(ValueError):
+            testApp.post('/add_comment', params=comment_params, expect_errors=True)
