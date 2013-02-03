@@ -27,12 +27,12 @@ class add_comment:
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     ACK_MSG = """
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-       "http://www.w3.org/TR/html4/strict.dtd"> 
-    <html> 
-        <head> 
+       "http://www.w3.org/TR/html4/strict.dtd">
+    <html>
+        <head>
             <meta http-equiv="content-type" content="text/html; charset=utf-8" />
             <meta http-equiv="refresh" content="5;url=%(return_url)s" />
-            <title>Comment Received</title> 
+            <title>Comment Received</title>
         </head>
     <body>
     <h1>Comment Received</h1>
