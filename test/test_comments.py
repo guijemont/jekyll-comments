@@ -23,6 +23,12 @@ class TestAddComment():
         r = testApp.get('/', status=404)
         assert_equal(r.status, 404)
 
+    def test_get(self):
+        middleware = []
+        testApp = TestApp(app.wsgifunc(*middleware))
+        r = testApp.get('/add_comment', params=self.correct_comment_params, status=405)
+        assert_equal(r.status, 405)
+
     def test_normal_post(self):
         middleware = []
         testApp = TestApp(app.wsgifunc(*middleware))
