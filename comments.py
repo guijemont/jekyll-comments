@@ -2,10 +2,14 @@
 import web
 import time
 import os.path
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # config
 #COMMENT_DIR = "/home/guijemont/dev/jekyll-bootstrap/_comments"
 COMMENT_DIR = "_comments"
+COMMENT_EMAIL = "blog@example.com"
 MAX_SIZE = 1024
 MAX_SIZE_COMMENT = 1024000
 
@@ -38,6 +42,10 @@ class add_comment:
     </body>
     </html>
     """
+    SMTPCONF = {
+        'host': 'localhost',
+        'port': 1025
+    }
     def POST(self):
         input_ = web.input()
         comment = {
@@ -47,6 +55,7 @@ class add_comment:
         }
         comment.update(self._input_data_iterator(input_))
         self._write_comment(comment, COMMENT_DIR)
+        self._email_comment(comment, COMMENT_EMAIL)
         web.header('Content-Type', 'text/html')
         return self.ACK_MSG % {'return_url': input_.return_url}
 
@@ -67,14 +76,17 @@ class add_comment:
                 yield (key, self._sanitize_field(getattr(input_, key), max_size))
 
     def _yml_from_dict(self, d):
-        s = ""
+        s = u""
         for item in d.iteritems():
             s += u"%s: '%s'\n" % item
         return s
 
+    def _date_file_name(self, comment):
+        return comment['date_gmt'].replace(' ', '_') + '.yaml'
+
     def _comment_file_name(self, comment):
         path = comment['post_id'].strip('/').replace('/', '_').replace(' ', '_')
-        file_name = comment['date_gmt'].replace(' ', '_') + '.yaml'
+        file_name = self._date_file_name(comment)
         return os.path.join(path, file_name)
 
     def _write_comment(self, comment, path):
@@ -87,6 +99,30 @@ class add_comment:
         f = open(full_file_name, "w")
         f.write(comment_string.encode("UTF-8"))
         f.close()
+
+    def _email_comment(self, comment, email):
+        comment_string = self._yml_from_dict(comment)
+        comment_string = comment_string.encode('UTF-8')
+        comment_attachment = MIMEText(comment_string,
+                                      #_subtype='x-yaml',
+                                      _charset='UTF-8')
+        comment_attachment.add_header('Content-Disposition', 'inline',
+                                      filename=self._date_file_name(comment))
+
+        message = MIMEMultipart()
+        message['Subject'] = "[blogcomment] New comment from %s on %s" % (
+                                                      comment['author_email'],
+                                                      comment['post_id'])
+        message['From'] = 'noreply@example.com'
+        message['To'] = email
+        message.attach(MIMEText("A new comment has been posted!\n"))
+
+
+        message.attach(comment_attachment)
+
+        s = smtplib.SMTP(**self.SMTPCONF)
+        s.sendmail(email, [email], message.as_string())
+        s.quit()
 
 
 if __name__ == "__main__":
