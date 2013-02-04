@@ -12,15 +12,15 @@ COMMENT_EMAIL = "blog@example.com"
 MAX_SIZE = 1024
 MAX_SIZE_COMMENT = 102400
 
-urls = (
-    '/add_comment', 'add_comment'
+URLS = (
+    '/add_comment', 'CommentHandler'
 )
 
 def is_test():
     webpy_env = os.environ.get('WEBPY_ENV', '')
     return webpy_env == 'test'
 
-class add_comment:
+class CommentHandler:
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     ACK_MSG = """
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
@@ -64,8 +64,11 @@ class add_comment:
             input_ = web.input()
         except ValueError:
             referer = web.ctx.env.get('HTTP_REFERER', '/')
-            return self.ERROR_MSG % {'error_msg': "Input is too big, you should write less! Hit the back button and try again.",
-                                     'return_url': referer}
+            return self.ERROR_MSG % {
+                'error_msg': "Input is too big, you should write less! Hit the"
+                    " back button and try again.",
+                'return_url': referer
+            }
         comment = {
             'author_ip': web.ctx.ip,
             'date_gmt': time.strftime(self.DATE_FORMAT, time.gmtime()),
@@ -90,7 +93,8 @@ class add_comment:
                 max_size = MAX_SIZE
                 if key == 'content':
                     max_size = MAX_SIZE_COMMENT
-                yield (key, self._sanitize_field(getattr(input_, key), max_size))
+                value = self._sanitize_field(getattr(input_, key), max_size)
+                yield (key, value)
 
     def _yml_from_dict(self, d):
         s = u""
@@ -129,7 +133,7 @@ class add_comment:
 
 # limit the size of POST requests to 10kb
 cgi.maxlen = MAX_SIZE_COMMENT
-app = web.application(urls, globals())
+app = web.application(URLS, globals())
 
 if (not is_test()) and __name__ == "__main__":
     app.run()
