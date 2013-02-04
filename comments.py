@@ -8,8 +8,6 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # config
-#COMMENT_DIR = "/home/guijemont/dev/jekyll-bootstrap/_comments"
-COMMENT_DIR = "_comments"
 COMMENT_EMAIL = "blog@example.com"
 MAX_SIZE = 1024
 MAX_SIZE_COMMENT = 102400
@@ -74,7 +72,6 @@ class add_comment:
             'date': time.strftime(self.DATE_FORMAT, time.localtime())
         }
         comment.update(self._input_data_iterator(input_))
-        self._write_comment(comment, COMMENT_DIR)
         self._email_comment(comment, COMMENT_EMAIL)
         web.header('Content-Type', 'text/html')
         return self.ACK_MSG % {'return_url': input_.return_url}
@@ -101,26 +98,8 @@ class add_comment:
             s += u"%s: '%s'\n" % item
         return s
 
-    def _date_file_name(self, comment):
+    def _file_name(self, comment):
         return comment['date_gmt'].replace(' ', '_') + '.yaml'
-
-    def _comment_file_name(self, comment):
-        path = comment['post_id'].strip('/').replace('/', '_').replace(' ', '_')
-        file_name = self._date_file_name(comment)
-        return os.path.join(path, file_name)
-
-    def _write_comment(self, comment, path):
-        comment_string = self._yml_from_dict(comment)
-        comment_string = comment_string.encode('UTF-8')
-        filepath = self._comment_file_name(comment)
-        full_file_name = os.path.join(path, filepath)
-        full_path, _ = os.path.split(full_file_name)
-        if not os.path.exists(full_path):
-            os.mkdir(full_path)
-        if not is_test():
-            f = open(full_file_name, "w")
-            f.write(comment_string)
-            f.close()
 
     def _email_comment(self, comment, email):
         comment_string = self._yml_from_dict(comment)
@@ -129,7 +108,7 @@ class add_comment:
                                       #_subtype='x-yaml',
                                       _charset='UTF-8')
         comment_attachment.add_header('Content-Disposition', 'inline',
-                                      filename=self._date_file_name(comment))
+                                      filename=self._file_name(comment))
 
         message = MIMEMultipart()
         message['Subject'] = "[blogcomment] New comment from %s on %s" % (
