@@ -100,7 +100,8 @@ class CommentHandler:
         web.header('Content-Type', 'text/html')
         return self.ACK_MSG % {'return_url': input_.return_url}
 
-    def _sanitize_field(self, data_, max_size=None):
+    @staticmethod
+    def _sanitize_field(data_, max_size=None):
         """
         Sanitize a string for use as a yaml value.
         """
@@ -125,7 +126,8 @@ class CommentHandler:
                 value = self._sanitize_field(getattr(input_, key), max_size)
                 yield (key, value)
 
-    def _yml_from_dict(self, d):
+    @staticmethod
+    def _yml_from_dict(d):
         """
         Generates a yaml string from a dict
         """
@@ -134,7 +136,8 @@ class CommentHandler:
             s += u"%s: '%s'\n" % item
         return s
 
-    def _file_name(self, comment):
+    @staticmethod
+    def _file_name(comment):
         """
         Generates a suitable file name for a comment
         """
