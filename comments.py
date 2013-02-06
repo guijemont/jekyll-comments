@@ -127,14 +127,14 @@ class CommentHandler:
                 yield (key, value)
 
     @staticmethod
-    def _yml_from_dict(d):
+    def _yml_from_dict(dict_):
         """
         Generates a yaml string from a dict
         """
-        s = u""
-        for item in d.iteritems():
-            s += u"%s: '%s'\n" % item
-        return s
+        yaml = u""
+        for item in dict_.iteritems():
+            yaml += u"%s: '%s'\n" % item
+        return yaml
 
     @staticmethod
     def _file_name(comment):
@@ -167,9 +167,9 @@ class CommentHandler:
         message.attach(comment_attachment)
 
         if not is_test():
-            s = smtplib.SMTP(**self.SMTPCONF)
-            s.sendmail(email, [email], message.as_string())
-            s.quit()
+            smtp_connection = smtplib.SMTP(**self.SMTPCONF)
+            smtp_connection.sendmail(email, [email], message.as_string())
+            smtp_connection.quit()
 
 
 # limit the size of POST requests to 10kb
