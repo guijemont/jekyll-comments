@@ -19,6 +19,7 @@ from email.mime.multipart import MIMEMultipart
 
 # config
 COMMENT_EMAIL = "blog@example.com"
+FROM_EMAIL = "noreply@example.com"
 MAX_SIZE = 1024
 MAX_SIZE_COMMENT = 102400
 
@@ -159,7 +160,7 @@ class CommentHandler:
         message['Subject'] = "[blogcomment] New comment from %s on %s" % (
                                                       comment['author_email'],
                                                       comment['post_id'])
-        message['From'] = 'noreply@emont.org'
+        message['From'] = FROM_EMAIL
         message['To'] = email
         message.attach(MIMEText("A new comment has been posted!\n"))
 
