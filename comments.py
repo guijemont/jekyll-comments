@@ -34,6 +34,8 @@ def is_test():
     webpy_env = os.environ.get('WEBPY_ENV', '')
     return webpy_env == 'test'
 
+# pylint: disable=W0232
+# no __init__ because we only provide methods
 class CommentHandler:
     """
     Class meant to be used by web.py.
@@ -77,6 +79,8 @@ class CommentHandler:
         'host': 'localhost',
         'port': 1025
     }
+    # pylint: disable=C0103
+    # name isn't nice, but that's web.py's API
     def POST(self):
         """
         Handle a POST request: gets its content, transforms it into yaml, email
@@ -100,6 +104,7 @@ class CommentHandler:
         self._email_comment(comment, COMMENT_EMAIL)
         web.header('Content-Type', 'text/html')
         return self.ACK_MSG % {'return_url': input_.return_url}
+    # pylint enable=C0103
 
     @staticmethod
     def _sanitize_field(data_, max_size=None):
@@ -172,6 +177,7 @@ class CommentHandler:
             smtp_connection.sendmail(email, [email], message.as_string())
             smtp_connection.quit()
 
+# pylint: enable=W0232
 
 # limit the size of POST requests to 10kb
 cgi.maxlen = MAX_SIZE_COMMENT
