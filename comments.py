@@ -1,4 +1,14 @@
 #!/usr/bin/env python
+"""
+CGI script that takes takes a POST to the address ./add_comment (normally from
+a comment form) and sends that comment formatted in yaml to the email address
+set in COMMENT_EMAIL.
+
+The resulting yaml file is meant to be used with Jekyll::StaticComments. See
+https://github.com/mpalmer/jekyll-static-comments/
+http://theshed.hezmatt.org/jekyll-static-comments/
+"""
+
 import web
 import cgi
 import time
@@ -17,10 +27,17 @@ URLS = (
 )
 
 def is_test():
+    """
+    Returns true iff the environment variable WEBPY_ENV is set to "test".
+    """
     webpy_env = os.environ.get('WEBPY_ENV', '')
     return webpy_env == 'test'
 
 class CommentHandler:
+    """
+    Class meant to be used by web.py.
+    Handles POST requests in the POST method
+    """
     DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
     ACK_MSG = """
     <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
@@ -60,6 +77,10 @@ class CommentHandler:
         'port': 1025
     }
     def POST(self):
+        """
+        Handle a POST request: gets its content, transforms it into yaml, email
+        the result and returns a confirmation page.
+        """
         try:
             input_ = web.input()
         except ValueError:
@@ -80,6 +101,9 @@ class CommentHandler:
         return self.ACK_MSG % {'return_url': input_.return_url}
 
     def _sanitize_field(self, data_, max_size=None):
+        """
+        Sanitize a string for use as a yaml value.
+        """
         if max_size is not None:
             data = data_[:max_size]
         else:
@@ -87,6 +111,11 @@ class CommentHandler:
         return data.replace("'", "").replace('\n', '\n  ')
 
     def _input_data_iterator(self, input_):
+        """
+        Transforms the POST input as returned by web.input() into a dictionary.
+        This only keeps the keys that we are interested, truncates values to a
+        maximum size and sanitizes the values.
+        """
         keys = ( 'author', 'author_email', 'author_url', 'content', 'post_id')
         for key in keys:
             if hasattr(input_, key):
@@ -97,15 +126,24 @@ class CommentHandler:
                 yield (key, value)
 
     def _yml_from_dict(self, d):
+        """
+        Generates a yaml string from a dict
+        """
         s = u""
         for item in d.iteritems():
             s += u"%s: '%s'\n" % item
         return s
 
     def _file_name(self, comment):
+        """
+        Generates a suitable file name for a comment
+        """
         return comment['date_gmt'].replace(' ', '_') + '.yaml'
 
     def _email_comment(self, comment, email):
+        """
+        Send a comment by email
+        """
         comment_string = self._yml_from_dict(comment)
         comment_string = comment_string.encode('UTF-8')
         comment_attachment = MIMEText(comment_string,
