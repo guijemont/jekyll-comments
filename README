@@ -1,0 +1,8 @@
+CGI script that takes takes a POST to the address ./add_comment (normally from
+a comment form) and sends that comment formatted in yaml to the email address
+set in COMMENT_EMAIL.
+
+The resulting yaml file is meant to be used with Jekyll::StaticComments. See
+https://github.com/mpalmer/jekyll-static-comments/
+http://theshed.hezmatt.org/jekyll-static-comments/
+
